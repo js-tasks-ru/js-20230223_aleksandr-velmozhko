@@ -7,7 +7,7 @@
 export const pick = (obj, ...fields) => {
   const result = {};
   for (const key of fields) {
-    if (key in obj) {
+    if (Object.hasOwnProperty.call(obj, key)) {
       result[key] = obj[key];
     }
   }
