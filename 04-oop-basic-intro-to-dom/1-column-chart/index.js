@@ -81,7 +81,7 @@ export default class ColumnChart {
   }
   destroy() {
     this.remove();
-    this.element = null;
-    this.dataElements = null;
+    this.element = {};
+    this.dataElements = {};
   }
 }
