@@ -1,11 +1,10 @@
 export default class SortableTable {
   element;
   arrow;
-  subElements;
+  subElements = {};
   constructor(headerConfig = [], data = []) {
     this.headerConfig = headerConfig;
     this.data = data;
-    this.template = headerConfig[0].template;
     this.render();
   }
 
@@ -16,6 +15,27 @@ export default class SortableTable {
     this.subElements = this.getSubElements(this.element);
     this.getArrow();
     this.updateArrow("title", "asc");
+  }
+
+  getTamplate() {
+    return `
+    <div data-element="productsContainer" class="products-list__container">
+    <div class="sortable-table"><div data-element="header" class="sortable-table__header sortable-table__row">
+    ${this.getHeader()}  </div>
+    <div data-element="body" class="sortable-table__body">
+    ${this.getProductsRows(this.data)} </div>
+    <div data-element="loading" class="loading-line sortable-table__loading-line"></div>
+
+    <div data-element="emptyPlaceholder"
+     class="sortable-table__empty-placeholder">
+    <div> <p>No products satisfies your filter criteria</p>
+    <button type="button" class="button-primary-outline">
+    Reset all filters </button>
+        </div>
+      </div>
+    </div>
+  </div>
+    `;
   }
 
   getHeader() {
@@ -31,62 +51,53 @@ export default class SortableTable {
       .join("");
   }
 
-  getProducts(data) {
-    return data
-      .map((item) => {
-        return `
-    <a href="#" class="sortable-table__row">
-    ${this.template(item.images)}
-     <div class="sortable-table__cell">${item.title}</div>
-     <div class="sortable-table__cell">${item.quantity}</div>
-          <div class="sortable-table__cell">${item.price}</div>
-          <div class="sortable-table__cell">${item.sales}</div>
-        </a>
-      `;
+  getProductsRows() {
+    return this.data
+      .map((product) => {
+        return ` <a href="/products/${product.id}" class="sortable-table__row">
+        ${this.getProductsColumns(product)} </a>`;
       })
       .join("");
   }
-  getTamplate() {
-    return `
-    <div data-element="productsContainer" class="products-list__container">
-    <div class="sortable-table"><div data-element="header" class="sortable-table__header sortable-table__row">
-    ${this.getHeader()}  </div>
-    <div data-element="body" class="sortable-table__body">
-    ${this.getProducts(this.data)} </div>
-    <div data-element="loading" class="loading-line sortable-table__loading-line"></div>
-    <div data-element="emptyPlaceholder"
-     class="sortable-table__empty-placeholder">
-    <div> <p>No products satisfies your filter criteria</p>
-    <button type="button" class="button-primary-outline">
-    Reset all filters </button>
-        </div>
-      </div>
-    </div>
-  </div>
-    `;
+
+  getProductsColumns(product) {
+    return this.headerConfig
+      .map((config) => {
+        const value = product[config.id];
+        if (config.template) {
+          return config.template(value);
+        }
+        return `<div class="sortable-table__cell">${value}</div>`;
+      })
+      .join("");
   }
 
   getArrow() {
-    this.arrow = document.createElement("div");
-    this.arrow.innerHTML = `<span data-element="arrow" class="sortable-table__sort-arrow">
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = `<span data-element="arrow" class="sortable-table__sort-arrow">
      <span class="sort-arrow"></span></span>`;
-  }
-
-  getSubElements(elem) {
-    const result = {};
-    const elements = elem.querySelectorAll("[data-id]");
-    for (const item of elements) {
-      const name = item.dataset.id;
-      result[name] = item;
-    }
-    const body = elem.querySelector("[data-element='body']");
-    result.body = body;
-    return result;
+    this.arrow = wrapper.firstElementChild;
   }
 
   updateArrow(value, order) {
     this.subElements[value].append(this.arrow);
     this.subElements[value].dataset.order = order;
+  }
+
+  getSubElements(prop) {
+    const result = {};
+    const headerElements = this.element.querySelectorAll("[data-id]");
+    for (const item of headerElements) {
+      const name = item.dataset.id;
+      result[name] = item;
+    }
+    const sortableTable = this.element.querySelectorAll("[data-element]");
+    for (const item of sortableTable) {
+      const name = item.dataset.element;
+      result[name] = item;
+    }
+
+    return result;
   }
 
   sort(value, order) {
@@ -95,17 +106,13 @@ export default class SortableTable {
       desc: -1,
     };
 
-    const sortData = [...this.data];
-
-    const sortableHeader = this.headerConfig.find(
+    const sortType = this.headerConfig.find(
       (item) => item.id === value && item.sortable
-    );
+    )?.sortType;
 
-    if (!sortableHeader) {
+    if (!sortType) {
       return;
     }
-
-    const sortType = sortableHeader.sortType;
 
     let compare;
 
@@ -126,9 +133,9 @@ export default class SortableTable {
         };
         break;
     }
-    sortData.sort(compare);
+    this.data.sort(compare);
     this.updateArrow(value, order);
-    this.subElements.body.innerHTML = this.getProducts(sortData);
+    this.subElements.body.innerHTML = this.getProductsRows();
   }
 
   remove() {
@@ -136,6 +143,7 @@ export default class SortableTable {
       this.element.remove();
     }
   }
+
   destroy() {
     this.remove();
     this.element = null;
