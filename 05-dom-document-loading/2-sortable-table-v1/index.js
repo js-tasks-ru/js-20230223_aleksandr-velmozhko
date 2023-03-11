@@ -10,13 +10,13 @@ export default class SortableTable {
 
   render() {
     const wrapper = document.createElement("div");
-    wrapper.innerHTML = this.getTamplate();
+    wrapper.innerHTML = this.getTamplate;
     this.element = wrapper.firstElementChild;
     this.subElements = this.getSubElements(this.element);
-    this.getArrow();
+    this.arrow = this.getArrow();
   }
 
-  getTamplate() {
+  get getTamplate() {
     return `
     <div data-element="productsContainer" class="products-list__container">
     <div class="sortable-table"><div data-element="header" class="sortable-table__header sortable-table__row">
@@ -39,12 +39,12 @@ export default class SortableTable {
 
   getHeader() {
     return this.headerConfig
-      .map((config) => {
+      .map(({ id, sortable, title }) => {
         return `<div
       class="sortable-table__cell"
-      data-id="${config.id}"
-      data-sortable="${config.sortable}">
-      <span>${config.title}</span> </div>`;
+      data-id="${id}"
+      data-sortable="${sortable}">
+      <span>${title}</span> </div>`;
       })
       .join("");
   }
@@ -60,10 +60,10 @@ export default class SortableTable {
 
   getProductsColumns(product) {
     return this.headerConfig
-      .map((config) => {
-        const value = product[config.id];
-        if (config.template) {
-          return config.template(value);
+      .map(({ id, template }) => {
+        const value = product[id];
+        if (template) {
+          return template(value);
         }
         return `<div class="sortable-table__cell">${value}</div>`;
       })
@@ -74,7 +74,7 @@ export default class SortableTable {
     const wrapper = document.createElement("div");
     wrapper.innerHTML = `<span data-element="arrow" class="sortable-table__sort-arrow">
      <span class="sort-arrow"></span></span>`;
-    this.arrow = wrapper.firstElementChild;
+    return wrapper.firstElementChild;
   }
 
   getSubElements(prop) {
@@ -92,13 +92,17 @@ export default class SortableTable {
 
     return result;
   }
+  updateArrow(field, order) {
+    this.subElements[field].append(this.arrow);
+    this.subElements[field].dataset.order = order;
+  }
 
-  sort(value, order) {
-    if (!this.isSordet(value, order)) {
+  sort(field, order) {
+    if (!this.isSordet(field, order)) {
       return;
     }
     const sortType = this.headerConfig.find(
-      (item) => item.id === value && item.sortable
+      (item) => item.id === field && item.sortable
     )?.sortType;
 
     if (!sortType) {
@@ -109,19 +113,19 @@ export default class SortableTable {
       asc: 1,
       desc: -1,
     };
-    this.updateArrow(value, order);
+    this.updateArrow(field, order);
     let compare;
     switch (sortType) {
       case "number":
         compare = function (a, b) {
-          return direction[order] * (a[value] - b[value]);
+          return direction[order] * (a[field] - b[field]);
         };
         break;
       case "string":
         compare = function (a, b) {
           return (
             direction[order] *
-            a[value].localeCompare(b[value], ["ru", "en"], {
+            a[field].localeCompare(b[field], ["ru", "en"], {
               caseFirst: "upper",
             })
           );
@@ -132,16 +136,11 @@ export default class SortableTable {
     this.subElements.body.innerHTML = this.getProductsRows();
   }
 
-  updateArrow(value, order) {
-    this.subElements[value].append(this.arrow);
-    this.subElements[value].dataset.order = order;
-  }
-
-  isSordet(value, order) {
+  isSordet(field, order) {
     const previousSorted =
       this.subElements.header.querySelector("[data-order]");
     if (
-      this.subElements[value] === previousSorted &&
+      this.subElements[field] === previousSorted &&
       previousSorted.dataset.order === order
     ) {
       return false;
