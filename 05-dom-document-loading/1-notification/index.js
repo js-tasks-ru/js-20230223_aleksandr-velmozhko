@@ -1,4 +1,5 @@
 export default class NotificationMessage {
+  element;
   constructor(message = "", { duration = 0, type = "" } = {}) {
     this.text = message;
     this.duration = duration;
@@ -37,7 +38,6 @@ export default class NotificationMessage {
     parentElement.append(this.element);
     setTimeout(() => {
       this.destroy();
-      console.log(this.element);
     }, this.duration);
   }
 
