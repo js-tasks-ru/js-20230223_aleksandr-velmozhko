@@ -14,7 +14,6 @@ export default class SortableTable {
     this.element = wrapper.firstElementChild;
     this.subElements = this.getSubElements(this.element);
     this.getArrow();
-    this.updateArrow("title", "asc");
   }
 
   getTamplate() {
@@ -44,8 +43,7 @@ export default class SortableTable {
         return `<div
       class="sortable-table__cell"
       data-id="${config.id}"
-      data-sortable="${config.sortable}"
-      data-order="asc">
+      data-sortable="${config.sortable}">
       <span>${config.title}</span> </div>`;
       })
       .join("");
@@ -79,11 +77,6 @@ export default class SortableTable {
     this.arrow = wrapper.firstElementChild;
   }
 
-  updateArrow(value, order) {
-    this.subElements[value].append(this.arrow);
-    this.subElements[value].dataset.order = order;
-  }
-
   getSubElements(prop) {
     const result = {};
     const headerElements = this.element.querySelectorAll("[data-id]");
@@ -101,11 +94,9 @@ export default class SortableTable {
   }
 
   sort(value, order) {
-    const direction = {
-      asc: 1,
-      desc: -1,
-    };
-
+    if (!this.isSordet(value, order)) {
+      return;
+    }
     const sortType = this.headerConfig.find(
       (item) => item.id === value && item.sortable
     )?.sortType;
@@ -114,8 +105,12 @@ export default class SortableTable {
       return;
     }
 
+    const direction = {
+      asc: 1,
+      desc: -1,
+    };
+    this.updateArrow(value, order);
     let compare;
-
     switch (sortType) {
       case "number":
         compare = function (a, b) {
@@ -134,10 +129,29 @@ export default class SortableTable {
         break;
     }
     this.data.sort(compare);
-    this.updateArrow(value, order);
     this.subElements.body.innerHTML = this.getProductsRows();
   }
 
+  updateArrow(value, order) {
+    this.subElements[value].append(this.arrow);
+    this.subElements[value].dataset.order = order;
+  }
+
+  isSordet(value, order) {
+    const previousSorted =
+      this.subElements.header.querySelector("[data-order]");
+    if (
+      this.subElements[value] === previousSorted &&
+      previousSorted.dataset.order === order
+    ) {
+      return false;
+    }
+
+    if (previousSorted) {
+      previousSorted.removeAttribute("data-order");
+    }
+    return true;
+  }
   remove() {
     if (this.element) {
       this.element.remove();
