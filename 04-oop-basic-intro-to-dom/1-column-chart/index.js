@@ -56,8 +56,7 @@ export default class ColumnChart {
   }
 
   getTemplate() {
-    const template = `
-    <div class="column-chart column-chart_loading"
+    return ` <div class="column-chart column-chart_loading"
     style="--chart-height: ${this.chartHeight}">
     <div class="column-chart__title">
     Total ${this.label}
@@ -69,7 +68,6 @@ export default class ColumnChart {
     ${this.getColumnCharts(this.data)}
     </div></div></div>
     `;
-    return template;
   }
 
   update(updatedData) {

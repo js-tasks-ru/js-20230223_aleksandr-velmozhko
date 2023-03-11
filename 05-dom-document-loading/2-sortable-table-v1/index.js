@@ -49,10 +49,10 @@ export default class SortableTable {
       .join("");
   }
 
-  getProductsRows() {
-    return this.data
+  getProductsRows(data) {
+    return data
       .map((product) => {
-        return ` <a href="/products/${product.id}" class="sortable-table__row">
+        return ` <a href="#" class="sortable-table__row">
         ${this.getProductsColumns(product)} </a>`;
       })
       .join("");
@@ -89,9 +89,9 @@ export default class SortableTable {
       const name = item.dataset.element;
       result[name] = item;
     }
-
     return result;
   }
+
   updateArrow(field, order) {
     this.subElements[field].append(this.arrow);
     this.subElements[field].dataset.order = order;
@@ -109,12 +109,18 @@ export default class SortableTable {
       return;
     }
 
+    this.updateArrow(field, order);
+    const compare = this.getComrareFunc(sortType, field, order);
+    const sortedData = [...this.data].sort(compare);
+    this.subElements.body.innerHTML = this.getProductsRows(sortedData);
+  }
+
+  getComrareFunc(sortType, field, order) {
+    let compare;
     const direction = {
       asc: 1,
       desc: -1,
     };
-    this.updateArrow(field, order);
-    let compare;
     switch (sortType) {
       case "number":
         compare = function (a, b) {
@@ -126,14 +132,13 @@ export default class SortableTable {
           return (
             direction[order] *
             a[field].localeCompare(b[field], ["ru", "en"], {
-              caseFirst: "upper",
+              ncaseFirst: "upper",
             })
           );
         };
         break;
     }
-    this.data.sort(compare);
-    this.subElements.body.innerHTML = this.getProductsRows();
+    return compare;
   }
 
   isSordet(field, order) {
@@ -151,6 +156,7 @@ export default class SortableTable {
     }
     return true;
   }
+
   remove() {
     if (this.element) {
       this.element.remove();
