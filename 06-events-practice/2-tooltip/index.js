@@ -1,25 +1,6 @@
 class Tooltip {
   static instance;
   element;
-  constructor() {
-    if (Tooltip.instance) {
-      return Tooltip.instance;
-    }
-    Tooltip.instance = this;
-  }
-
-  initialize() {
-    document.addEventListener("pointerover", this.handlePointerOver);
-    document.addEventListener("pointerout", this.handlePointerOut);
-  }
-
-  render(message = "") {
-    const tooltip = document.createElement("div");
-    tooltip.classList.add("tooltip");
-    tooltip.textContent = message;
-    document.body.append(tooltip);
-    this.element = tooltip;
-  }
 
   handlePointerOver = (event) => {
     const target = event.target.closest("[data-tooltip]");
@@ -47,6 +28,26 @@ class Tooltip {
     target.removeEventListener("pointermove", this.handlePointerMove);
     this.remove();
   };
+
+  constructor() {
+    if (Tooltip.instance) {
+      return Tooltip.instance;
+    }
+    Tooltip.instance = this;
+  }
+
+  initialize() {
+    document.addEventListener("pointerover", this.handlePointerOver);
+    document.addEventListener("pointerout", this.handlePointerOut);
+  }
+
+  render(message = "") {
+    const tooltip = document.createElement("div");
+    tooltip.classList.add("tooltip");
+    tooltip.textContent = message;
+    document.body.append(tooltip);
+    this.element = tooltip;
+  }
 
   remove() {
     if (this.element) {
