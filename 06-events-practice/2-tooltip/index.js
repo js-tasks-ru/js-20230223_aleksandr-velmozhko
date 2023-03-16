@@ -11,12 +11,12 @@ class Tooltip {
     const message = target.dataset.tooltip;
     this.render(message);
 
-    target.addEventListener("pointermove", this.handlePointerMove);
+    document.addEventListener("pointermove", this.handlePointerMove);
   };
 
   handlePointerMove = (event) => {
-    this.element.style.left = `${event.pageX + this.tooltipPos}px`;
-    this.element.style.top = `${event.pageY + this.tooltipPos}px`;
+    this.element.style.left = `${event.clientX + this.tooltipPos}px`;
+    this.element.style.top = `${event.clientY + this.tooltipPos}px`;
   };
 
   handlePointerOut = (event) => {
@@ -57,6 +57,7 @@ class Tooltip {
     this.remove();
     document.removeEventListener("pointerover", this.handlePointerOver);
     document.removeEventListener("pointerout", this.handlePointerOut);
+    document.removeEventListener("pointermove", this.handlePointerMove);
     this.element = null;
   }
 }

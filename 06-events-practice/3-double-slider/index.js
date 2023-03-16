@@ -57,9 +57,9 @@ export default class DoubleSlider {
   get getTemplate() {
     const { left, right } = this.getPercent();
 
-    return `<div class="range-slider">
+    return `<div class="range-slider ">
     <span data-element="from">${this.formatValue(this.from)}</span>
-    <div class="range-slider__inner" data-element="slider">
+    <div class="range-slider__inner range-slider_dragging" data-element="slider">
     <span class="range-slider__progress" data-element="progressBar" style="right:${right}%; left : ${left}%"></span>
     <span class="range-slider__thumb-left" data-element="leftThumb" style="left:${left}%" ></span>
     <span class="range-slider__thumb-right" data-element="rightThumb" style="right:${right}%"></span>

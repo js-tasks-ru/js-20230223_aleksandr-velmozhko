@@ -156,21 +156,21 @@ export default class SortableTable {
       desc: -1,
     };
     switch (sortType) {
-      case "number":
-        compare = function (a, b) {
-          return direction[order] * (a[field] - b[field]);
-        };
-        break;
-      case "string":
-        compare = function (a, b) {
-          return (
-            direction[order] *
+    case "number":
+      compare = function (a, b) {
+        return direction[order] * (a[field] - b[field]);
+      };
+      break;
+    case "string":
+      compare = function (a, b) {
+        return (
+          direction[order] *
             a[field].localeCompare(b[field], ["ru", "en"], {
               ncaseFirst: "upper",
             })
-          );
-        };
-        break;
+        );
+      };
+      break;
     }
     return compare;
   }
