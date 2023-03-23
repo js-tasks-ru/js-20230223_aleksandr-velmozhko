@@ -127,5 +127,6 @@ export default class ColumnChart {
     this.remove();
     this.element = null;
     this.subElements = null;
+    this.cash = null;
   }
 }
