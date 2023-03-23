@@ -4,23 +4,26 @@ const BACKEND_URL = "https://course-js.javascript.ru";
 
 export default class ColumnChart {
   chartHeight = 50;
+  subElements = {};
+
   constructor({
     label = "",
     link = "",
     url = "",
-    range: { from = "", to = "" } = {},
+    value = 0,
+    range = {},
     formatHeading = (data) => data,
   } = {}) {
     this.label = label;
     this.formatHeading = formatHeading;
     this.link = link;
     this.url = url;
-    this.from = from.toISOString();
-    this.to = to.toISOString();
+    this.range = range;
     this.data = [];
+    this.value = value;
 
     this.render();
-    this.loadData();
+    this.update(this.range?.from, this.range?.to);
   }
 
   render() {
@@ -32,30 +35,39 @@ export default class ColumnChart {
     this.subElements = this.getSubElements(this.element);
   }
 
-  async loadData() {
+  async loadData(from, to) {
     this.element.classList.add("column-chart_loading");
-    const url = new URL(this.url, "https://course-js.javascript.ru");
-    url.searchParams.set("from", this.from);
-    url.searchParams.set("to", this.to);
+    const url = new URL(this.url, BACKEND_URL);
+    url.searchParams.set("from", from);
+    url.searchParams.set("to", to);
     let response;
-
     try {
       response = await fetchJson(url);
-      this.data = Object.values(response);
-      this.value = this.data.reduce((accum, item) => (accum += item), 0);
     } catch (error) {
-      console.error(error);
+      console.log("Ошибка загрузки данных " + error);
+      throw new Error("Ошибка загрузки данных " + error);
     }
+    return response;
+  }
+
+  async update(from, to) {
+    from = from.toISOString().split("T")[0];
+    to = to.toISOString().split("T")[0];
+    const loadedData = await this.loadData(from, to);
+    this.data = Object.values(loadedData);
+
     if (this.data.length) {
-      this.subElements.body.innerHTML = this.getColumnCharts(this.data);
-      this.subElements.header.innerHTML = this.formatHeading(this.value);
       this.element.classList.remove("column-chart_loading");
+      this.value = this.data.reduce((accum, item) => (accum += item), 0);
+      this.subElements.header.textContent = this.formatHeading(this.value);
+      this.subElements.body.innerHTML = this.getColumnCharts(this.data);
     }
+
+    return loadedData;
   }
 
   getSubElements(element) {
     let result = {};
-
     const elements = element.querySelectorAll("[data-element]");
     for (const elem of elements) {
       const name = elem.dataset.element;
@@ -97,17 +109,14 @@ export default class ColumnChart {
     `;
   }
 
-  update(...args) {
-    [this.from, this.to] = args.map((date) => date.toISOString());
-    this.loadData();
-  }
-
   remove() {
-    this.element.remove();
+    if (this.element) {
+      this.element.remove();
+    }
   }
   destroy() {
     this.remove();
-    this.element = {};
-    this.subElements = {};
+    this.element = null;
+    this.subElements = null;
   }
 }
