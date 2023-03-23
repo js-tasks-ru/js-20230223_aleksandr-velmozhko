@@ -5,7 +5,7 @@ const BACKEND_URL = "https://course-js.javascript.ru";
 export default class ColumnChart {
   chartHeight = 50;
   subElements = {};
-
+  cash = new Map();
   constructor({
     label = "",
     link = "",
@@ -53,19 +53,28 @@ export default class ColumnChart {
   async update(from, to) {
     from = from.toISOString().split("T")[0];
     to = to.toISOString().split("T")[0];
+    if (this.cash.get(from) === to) {
+      this.showNewData();
+      return;
+    }
+    this.cash.clear();
+    this.cash.set(from, to);
+
     const loadedData = await this.loadData(from, to);
     this.data = Object.values(loadedData);
 
     if (this.data.length) {
-      this.element.classList.remove("column-chart_loading");
-      this.value = this.data.reduce((accum, item) => (accum += item), 0);
-      this.subElements.header.textContent = this.formatHeading(this.value);
-      this.subElements.body.innerHTML = this.getColumnCharts(this.data);
+      this.showNewData();
     }
 
     return loadedData;
   }
-
+  showNewData() {
+    this.element.classList.remove("column-chart_loading");
+    this.value = this.data.reduce((accum, item) => (accum += item), 0);
+    this.subElements.header.innerHTML = this.formatHeading(this.value);
+    this.subElements.body.innerHTML = this.getColumnCharts(this.data);
+  }
   getSubElements(element) {
     let result = {};
     const elements = element.querySelectorAll("[data-element]");
