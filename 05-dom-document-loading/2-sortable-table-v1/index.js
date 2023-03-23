@@ -2,6 +2,7 @@ export default class SortableTable {
   element;
   arrow;
   subElements = {};
+
   constructor(headerConfig = [], data = []) {
     this.headerConfig = headerConfig;
     this.data = data;
@@ -39,7 +40,7 @@ export default class SortableTable {
 
   getHeader() {
     return this.headerConfig
-      .map(({ id, sortable, title }) => {
+      .map(({id, sortable, title}) => {
         return `<div
       class="sortable-table__cell"
       data-id="${id}"
@@ -60,7 +61,7 @@ export default class SortableTable {
 
   getProductsColumns(product) {
     return this.headerConfig
-      .map(({ id, template }) => {
+      .map(({id, template}) => {
         const value = product[id];
         if (template) {
           return template(value);
@@ -122,21 +123,21 @@ export default class SortableTable {
       desc: -1,
     };
     switch (sortType) {
-      case "number":
-        compare = function (a, b) {
-          return direction[order] * (a[field] - b[field]);
-        };
-        break;
-      case "string":
-        compare = function (a, b) {
-          return (
-            direction[order] *
-            a[field].localeCompare(b[field], ["ru", "en"], {
-              ncaseFirst: "upper",
-            })
-          );
-        };
-        break;
+    case "number":
+      compare = function (a, b) {
+        return direction[order] * (a[field] - b[field]);
+      };
+      break;
+    case "string":
+      compare = function (a, b) {
+        return (
+          direction[order] *
+          a[field].localeCompare(b[field], ["ru", "en"], {
+            ncaseFirst: "upper",
+          })
+        );
+      };
+      break;
     }
     return compare;
   }

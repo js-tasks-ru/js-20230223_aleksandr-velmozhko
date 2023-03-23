@@ -1,6 +1,7 @@
 class Tooltip {
   static instance;
   element;
+  tooltipPos = 10;
 
   handlePointerOver = (event) => {
     const target = event.target.closest("[data-tooltip]");
@@ -9,15 +10,13 @@ class Tooltip {
     }
     const message = target.dataset.tooltip;
     this.render(message);
-    this.element.style.left = `${event.pageX + 10}px`;
-    this.element.style.top = `${event.pageY + 10}px`;
 
-    target.addEventListener("pointermove", this.handlePointerMove);
+    document.addEventListener("pointermove", this.handlePointerMove);
   };
 
   handlePointerMove = (event) => {
-    this.element.style.left = `${event.pageX + 10}px`;
-    this.element.style.top = `${event.pageY + 10}px`;
+    this.element.style.left = `${event.clientX + this.tooltipPos}px`;
+    this.element.style.top = `${event.clientY + this.tooltipPos}px`;
   };
 
   handlePointerOut = (event) => {
@@ -58,6 +57,7 @@ class Tooltip {
     this.remove();
     document.removeEventListener("pointerover", this.handlePointerOver);
     document.removeEventListener("pointerout", this.handlePointerOut);
+    document.removeEventListener("pointermove", this.handlePointerMove);
     this.element = null;
   }
 }
