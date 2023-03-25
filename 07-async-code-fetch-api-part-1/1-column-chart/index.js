@@ -17,13 +17,13 @@ export default class ColumnChart {
     this.label = label;
     this.formatHeading = formatHeading;
     this.link = link;
-    this.url = url;
+    this.url = new URL(url, BACKEND_URL);
     this.range = range;
     this.data = [];
     this.value = value;
 
     this.render();
-    this.update(this.range?.from, this.range?.to);
+    this.update(this.range.from, this.range.to);
   }
 
   render() {
@@ -36,47 +36,47 @@ export default class ColumnChart {
   }
 
   async loadData(from, to) {
-    this.element.classList.add("column-chart_loading");
-    const url = new URL(this.url, BACKEND_URL);
-    url.searchParams.set("from", from);
-    url.searchParams.set("to", to);
-    let response;
+    this.url.searchParams.set("from", from);
+    this.url.searchParams.set("to", to);
+
     try {
-      response = await fetchJson(url);
+      return await fetchJson(this.url);
     } catch (error) {
       console.log("Ошибка загрузки данных " + error);
-      throw new Error("Ошибка загрузки данных " + error);
+      throw new Error("Ошибка загрузки данных с сервера" + error);
     }
-    return response;
   }
 
   async update(from, to) {
-    from = from.toISOString().split("T")[0];
-    to = to.toISOString().split("T")[0];
-    if (this.cash.get(from) === to) {
-      this.showNewData();
+    const fromDate = from.toISOString().split("T")[0];
+    const toDate = to.toISOString().split("T")[0];
+
+    if (this.cash.get(fromDate) === toDate && this.data.length) {
       return;
     }
     this.cash.clear();
-    this.cash.set(from, to);
+    this.cash.set(fromDate, toDate);
 
-    const loadedData = await this.loadData(from, to);
+    this.element.classList.add("column-chart_loading");
+    const loadedData = await this.loadData(fromDate, toDate);
     this.data = Object.values(loadedData);
 
     if (this.data.length) {
       this.showNewData();
+      this.element.classList.remove("column-chart_loading");
     }
 
     return loadedData;
   }
+
   showNewData() {
-    this.element.classList.remove("column-chart_loading");
     this.value = this.data.reduce((accum, item) => (accum += item), 0);
     this.subElements.header.innerHTML = this.formatHeading(this.value);
     this.subElements.body.innerHTML = this.getColumnCharts(this.data);
   }
+
   getSubElements(element) {
-    let result = {};
+    const result = {};
     const elements = element.querySelectorAll("[data-element]");
     for (const elem of elements) {
       const name = elem.dataset.element;
