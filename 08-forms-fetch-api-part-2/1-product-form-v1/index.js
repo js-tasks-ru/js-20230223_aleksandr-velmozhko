@@ -9,8 +9,10 @@ export default class ProductForm {
   categories;
   buttons;
   inputs;
+  subElement;
 
-  onUploadBtnClick = () => {
+  onUploadBtnClick = (event) => {
+    event.preventDefault();
     const input = document.createElement("input");
     input.type = "file";
     input.click();
@@ -32,13 +34,20 @@ export default class ProductForm {
     const url = new URL("/api/rest/products", BACKEND_URL);
     const method = this.productId ? "PATCH" : "PUT";
     const data = this.getFormData();
-    const response = await fetchJson(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
+    try {
+      const result = await fetchJson(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const event = new CustomEvent("product-saved", { detail: result });
+      this.element.dispatchEvent(event);
+      console.log("форма отправлена");
+    } catch (error) {
+      console.error("ошибка отправки формы", error);
+    }
   };
 
   constructor(productId) {
@@ -46,19 +55,20 @@ export default class ProductForm {
   }
 
   async render() {
-    this.product = await this.getProduct(this.productId);
-    this.categories = await this.getCategories();
+    await Promise.all([this.getProduct(this.productId), this.getCategories()]);
+    this.createForm();
+    this.fillThisForm();
+    this.initEventListeners();
+  }
+
+  createForm() {
     const wrapper = document.createElement("div");
     wrapper.innerHTML = this.getTemplate(this.product);
     this.element = wrapper.firstElementChild;
     this.buttons = this.getButtons();
     this.inputs = this.getInputs();
     this.subElements = this.getSubElements();
-    this.fillThisForm();
-    this.initEventListeners();
-    console.log(this.product);
   }
-
   getFormData() {
     const { productForm, imageListContainer } = this.subElements;
     const formatToNumber = ["price", "quantity", "discount", "status"];
@@ -77,8 +87,6 @@ export default class ProductForm {
     );
     values.images = [];
     for (const image of imagesHTMLCollection) {
-      console.log(image[0]);
-
       values.images.push({
         url: image.src,
         source: image.nextElementSibling.textContent,
@@ -91,14 +99,15 @@ export default class ProductForm {
     const url = new URL("/api/rest/products", BACKEND_URL);
     url.searchParams.set("id", productId);
     const response = await fetchJson(url);
-    return response[0];
+    this.product = response[0];
   }
+
   async getCategories() {
     const categories = await fetchJson(
       "https://course-js.javascript.ru/api/rest/categories?_sort=weight&_refs=subcategory"
     );
 
-    return categories
+    this.categories = categories
       .map((category) => {
         return category.subcategories.map((subcategory) => {
           return `<option value="${subcategory.id}">${category.title} > ${subcategory.title}</option>`;
@@ -146,9 +155,10 @@ export default class ProductForm {
       console.error("ошибка загрузки изображения на сервер", error);
     }
   }
+
   uploadNewImage(url, name) {
     const wrapper = document.createElement("div");
-    wrapper.innerHTML = this.getImagesList([{ url, source: name }]);
+    wrapper.innerHTML = this.fillImagesList([{ url, source: name }]);
     const li = wrapper.firstElementChild;
     this.element.querySelector(".sortable-list").append(li);
   }
@@ -170,7 +180,7 @@ export default class ProductForm {
         <label class="form-label">Фото</label>
         <div data-element="imageListContainer">
         <ul class="sortable-list">
-        ${this.getImagesList(this.product.images)}
+        ${this.fillImagesList(this.product.images)}
         </ul>
 
           </div>
@@ -211,7 +221,7 @@ export default class ProductForm {
     </form>
   </div>`;
   }
-  getImagesList(data) {
+  fillImagesList(data) {
     return data
       .map((image) => {
         return `
@@ -230,19 +240,19 @@ export default class ProductForm {
       .join("");
   }
   fillThisForm() {
-    const { title, description, price, discount, quantity, status } =
-      this.product;
-    console.log(this.inputs);
-    this.inputs.title.value = title;
-    this.inputs.description.value = description;
-    this.inputs.price.value = price;
-    this.inputs.discount.value = discount;
-    this.inputs.quantity.value = quantity;
-    this.inputs.status.value = status;
+    Object.entries(this.product).forEach(([key, value]) => {
+      const input = this.element.querySelector(`[name="${key}"]`);
+      if (input) {
+        input.value = value;
+      }
+    });
   }
 
   initEventListeners() {
-    this.buttons.uploadImage.addEventListener("click", this.onUploadBtnClick);
+    this.buttons.uploadImage.addEventListener(
+      "pointerdown",
+      this.onUploadBtnClick
+    );
     this.buttons.save.addEventListener("click", this.sendFormBtnClick);
   }
   remove() {
