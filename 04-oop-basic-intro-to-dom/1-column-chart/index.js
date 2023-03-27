@@ -27,7 +27,7 @@ export default class ColumnChart {
   }
 
   getDataElements(element) {
-    let result = {};
+    const result = {};
 
     const elements = element.querySelectorAll("[data-element]");
     for (const elem of elements) {
