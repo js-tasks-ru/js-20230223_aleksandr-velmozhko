@@ -39,35 +39,7 @@ export default class ProductForm {
       },
       body: JSON.stringify(data),
     });
-    console.log(response);
   };
-  getFormData() {
-    const { productForm, imageListContainer } = this.subElements;
-    const excludedFields = ["images"];
-    const formatToNumber = ["price", "quantity", "discount", "status"];
-    const fields = Object.keys(this.inputs).filter(
-      (item) => !excludedFields.includes(item)
-    );
-    const values = {};
-    for (const field of fields) {
-      values[field] = formatToNumber.includes(field)
-        ? parseInt(productForm[field].value)
-        : productForm[field].value;
-    }
-    const imagesHTMLCollection = imageListContainer.querySelectorAll(
-      ".sortable-table__cell-img"
-    );
-    values.images = [];
-    values.id = this.productId;
-    for (const image of imagesHTMLCollection) {
-      values.images.push({
-        url: image.src,
-        source: image.alt,
-      });
-    }
-    console.log(values);
-    return values;
-  }
 
   constructor(productId) {
     this.productId = productId;
@@ -84,6 +56,35 @@ export default class ProductForm {
     this.subElements = this.getSubElements();
     this.fillThisForm();
     this.initEventListeners();
+    console.log(this.product);
+  }
+
+  getFormData() {
+    const { productForm, imageListContainer } = this.subElements;
+    const formatToNumber = ["price", "quantity", "discount", "status"];
+
+    const values = {};
+
+    for (const field of Object.keys(this.inputs)) {
+      values[field] = formatToNumber.includes(field)
+        ? parseInt(productForm[field].value)
+        : productForm[field].value;
+    }
+
+    values.id = this.productId;
+    const imagesHTMLCollection = imageListContainer.querySelectorAll(
+      ".sortable-table__cell-img"
+    );
+    values.images = [];
+    for (const image of imagesHTMLCollection) {
+      console.log(image[0]);
+
+      values.images.push({
+        url: image.src,
+        source: image.nextElementSibling.textContent,
+      });
+    }
+    return values;
   }
 
   async getProduct(productId) {
