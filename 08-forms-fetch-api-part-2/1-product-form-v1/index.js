@@ -14,7 +14,7 @@ export default class ProductForm {
   defaultFormData = {
     description: "",
     discount: 0,
-    price: "",
+    price: 100,
     quantity: 1,
     status: 1,
     subcategory: "",
@@ -86,7 +86,6 @@ export default class ProductForm {
     this.createForm();
     this.fillThisForm();
     this.initEventListeners();
-    console.log(this.subElements);
     return this.element;
   }
 
@@ -280,6 +279,7 @@ export default class ProductForm {
   }
 
   fillImagesList(data) {
+    console.log(data);
     return data
       .map(({ url, source }) => {
         return `
@@ -308,8 +308,8 @@ export default class ProductForm {
   }
   dispatchEvent(result) {
     const event = this.productId
-      ? new CustomEvent("product-saved", { detail: result })
-      : new CustomEvent("product-created", {});
+      ? new CustomEvent("product-updated", { detail: result })
+      : new CustomEvent("product-saved", {});
     this.element.dispatchEvent(event);
   }
   initEventListeners() {
