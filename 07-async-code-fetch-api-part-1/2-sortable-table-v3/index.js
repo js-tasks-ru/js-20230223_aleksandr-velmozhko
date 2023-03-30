@@ -10,7 +10,7 @@ export default class SortableTable {
   end = this.start + this.step;
   loading = false;
 
-  onClickSortFunc = (event) => {
+  onClickSortHandler = (event) => {
     const target = event.target.closest("[data-sortable='true']");
     if (!target) {
       return;
@@ -25,7 +25,7 @@ export default class SortableTable {
       this.sortOnServer(id, newOrder);
     }
   };
-  onScrollFunc = async () => {
+  onScrollHandler = async () => {
     const { bottom } = this.element.getBoundingClientRect();
     const { clientHeight } = document.documentElement;
 
@@ -142,10 +142,10 @@ export default class SortableTable {
   addEventListener() {
     this.subElements.header.addEventListener(
       "pointerdown",
-      this.onClickSortFunc
+      this.onClickSortHandler
     );
     if (!this.isSortLocally) {
-      window.addEventListener("scroll", this.onScrollFunc);
+      window.addEventListener("scroll", this.onScrollHandler);
     }
   }
 
@@ -253,6 +253,6 @@ export default class SortableTable {
     this.element = null;
     this.arrow = null;
     this.subElements = null;
-    window.removeEventListener("scroll", this.onScrollFunc);
+    window.removeEventListener("scroll", this.onScrollHandler);
   }
 }
